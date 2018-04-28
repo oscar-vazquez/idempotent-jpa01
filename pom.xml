@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>prueba.idempotent</groupId>
+    <artifactId>jpa01</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>bundle</packaging>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.target>1.7</maven.compiler.target>
+        <maven.compiler.source>1.7</maven.compiler.source>
+        <version.maven-surefire-plugin>2.15</version.maven-surefire-plugin>
+        <version.maven-bundle-plugin>2.3.7</version.maven-bundle-plugin>
+        <cxf-version>3.0.2</cxf-version>
+        <maven-resources-plugin-version>2.6</maven-resources-plugin-version>
+        <build-helper-maven-plugin-version>1.9.1</build-helper-maven-plugin-version>
+        <skipTests>true</skipTests>
+
+        <!-- the version of the BOM, defining all the dependency versions -->
+        <fabric.version>1.2.0.redhat-630187</fabric.version>
+
+        <!-- the version of the JBoss Fuse BOM, defining all the dependency versions -->
+        <jboss.fuse.bom.version>6.3.0.redhat-187</jboss.fuse.bom.version>
+
+        <!-- fabric8 deploy profile configuration -->
+        <fabric8.profile>prueba-jpa</fabric8.profile>
+        <fabric8.parentProfiles>feature-cxf</fabric8.parentProfiles>
+        <fabric8.features>cxf-jaxrs swagger</fabric8.features>
+
+        <camel.version>2.17.0.redhat-630187</camel.version>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>redhat-ga-repository</id>
+            <url>https://maven.repository.redhat.com/ga</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>redhat-ea-repository</id>
+            <url>https://maven.repository.redhat.com/earlyaccess/all</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.jboss.fuse.bom</groupId>
+                <artifactId>jboss-fuse-parent</artifactId>
+                <version>6.3.0.redhat-187</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-core</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-blueprint</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.camel</groupId>
+            <artifactId>camel-jpa</artifactId>
+            <version>${camel.version}</version>
+        </dependency>
+        <!--
+        <dependency>
+            <groupId>javax.jpa</groupId>
+            <artifactId>javax-jpa</artifactId>
+            <version>2.0</version>
+        </dependency>
+        -->
+        <dependency>
+            <groupId>javax.persistence</groupId>
+            <artifactId>persistence-api</artifactId>
+            <version>1.0.2</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>${project.artifactId}</finalName>
+
+        <defaultGoal>install</defaultGoal>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+
+        <plugins>
+            <!-- Skip Test by default and enable them only in Test profile -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${version.maven-surefire-plugin}</version>
+                <configuration>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
+            <!-- Compiler plugin enforces Java 1.7 compatibility and activates annotation processors -->
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>${maven-resources-plugin-version}</version>
+                <executions>
+                    <execution>
+                        <id>filter</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>resources</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>${version.maven-bundle-plugin}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Import-Package>
+                            javax.persistence,
+                            org.hibernate.proxy,
+                            javassist.util.proxy,
+                            *
+                        </Import-Package>
+                        <Import-Service>
+                            org.apache.aries.blueprint.NamespaceHandler;
+                            osgi.service.blueprint.namespace=http://cxf.apache.org/transports/http/configuration
+                        </Import-Service>
+                        <Meta-Persistence>META-INF/persistence.xml</Meta-Persistence>
+                        <manifestLocation>target/META-INF</manifestLocation>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

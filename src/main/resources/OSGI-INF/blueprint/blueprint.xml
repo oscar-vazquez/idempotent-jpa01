@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+           xmlns:jpa="http://aries.apache.org/xmlns/jpa/v1.0.0"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="
+           http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd">
+
+    <!--
+    <reference id="entityManagerFactory" interface="javax.jpa">
+        <
+    </reference>
+    <bean id="entityManagerFactory"  ref="entityMan
+    agerFactoryBean">
+        <property name="persistenceUnitName" value="synergia"/>
+    </bean>
+    <bean id="messageIdRepository" class="org.apache.camel.processor.idempotent.jpa.JpaMessageIdRepository">
+        <argument ref="synergia"/>
+|        <argument value="prueba"/>
+    </bean>
+    <bean id="messageIdRepository"
+          class="org.apache.camel.processor.idempotent.jpa.JpaMessageIdRepository"
+          factory-method="jpaMessageIdRepository" >
+        <argument value="synergia"/>
+        <argument value="prueba"/>
+    </bean>
+-->
+
+    <reference id="entityManagerFactory" interface="javax.persistence.EntityManagerFactory"/>
+
+    <bean id="messageIdRepository" class="org.apache.camel.processor.idempotent.jpa.JpaMessageIdRepository">
+        <argument ref="entityManagerFactory"/>
+        <argument value="prueba"/>
+    </bean>
+
+
+    <bean id="jpa" class="org.apache.camel.component.jpa.JpaComponent">
+        <jpa:unit unitname="synergia" property="entityManagerFactory" />
+    </bean>
+
+
+    <camelContext id="idempotent-jap" xmlns="http://camel.apache.org/schema/blueprint">
+        <route id="r01">
+            <from uri="file:work/prueba"/>
+            <log message="Receiving order ${file:name}"/>
+            <idempotentConsumer messageIdRepositoryRef="" skipDuplicate="true">
+                <simple>${file:name}</simple>
+                <log message="CamelDuplicateMessage: ${property.CamelDuplicateMessage}"/>
+                <filter>
+                    <exchangeProperty>CamelDuplicateMessage</exchangeProperty>
+                    <log message="REPETIDO"/>
+                    <stop/>
+                </filter>
+                <log message="PROCESAR"/>
+            </idempotentConsumer>
+            <log message="FIN"/>
+        </route>
+    </camelContext>
+</blueprint>
